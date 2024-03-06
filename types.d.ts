@@ -15,3 +15,11 @@ type User = {
     auth_token: string,
 
 }
+
+type UserImage = {
+
+    image_filename: string,
+
+    auth_token: string,
+
+}
