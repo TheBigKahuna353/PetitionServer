@@ -110,16 +110,16 @@ const view = async (req: Request, res: Response): Promise<void> => {
             res.status(404).send();
             return;
         }
-        
+
         if(user[0].auth_token === token){
 
-            res.status(200).send({"first_name": user[0].first_name,
-                                    "last_name": user[0].last_name,
+            res.status(200).send({"firstName": user[0].first_name,
+                                    "lastName": user[0].last_name,
                                     "email": user[0].email});
             return;
         }
-        res.status(200).send({"first_name": user[0].first_name,
-                                "last_name": user[0].last_name});
+        res.status(200).send({"firstName": user[0].first_name,
+                                "lastName": user[0].last_name});
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
@@ -130,11 +130,72 @@ const view = async (req: Request, res: Response): Promise<void> => {
 
 const update = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
-        return;
+        const schema = schemas.user_edit;
+        const validation = await validate(schema, req.body);
+
+        if(validation !== true){
+            res.statusMessage = validation;
+            res.status(400).send();
+            return;
+        }
+
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.statusMessage = "Bad Request: ID must be a number";
+            res.status(400).send();
+            return;
+        }
+        const token = req.header('X-Authorization');
+        const user = await users.getOne(id);
+        if (user.length === 0) {
+            res.statusMessage = "Not Found: No user with specified ID";
+            res.status(404).send();
+            return;
+        }
+        if(user[0].auth_token !== token){
+            res.statusMessage = "Unauthorized: Can not edit another user's information";
+            res.status(401).send();
+            return;
+        }
+
+        let password = user[0].password;
+        let email = user[0].email;
+        let firstName = user[0].first_name;
+        let lastName = user[0].last_name;
+
+        if (req.body.hasOwnProperty('password')) {
+            password = req.body.password;
+            const currentPassword = req.body.currentPassword;
+            if (currentPassword !== user[0].password) {
+                res.statusMessage = "Unauthorized: Incorrect password";
+                res.status(401).send();
+                return;
+            }
+            if (password === currentPassword) {
+                res.statusMessage = "Bad Request: Identical current and new passwords";
+                res.status(403).send();
+                return;
+            }
+        }
+        if (req.body.hasOwnProperty('email')) {
+            email = req.body.email;
+        }
+        if (req.body.hasOwnProperty('firstName')) {
+            firstName = req.body.firstName;
+        }
+        if (req.body.hasOwnProperty('lastName')) {
+            lastName = req.body.lastName;
+        }
+
+        const result = await users.update(email, firstName, lastName, password, id);
+        res.status(200).send();
+
     } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+            res.statusMessage = "Email already in use";
+            res.status(403).send();
+            return;
+        }
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
         res.status(500).send();

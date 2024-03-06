@@ -47,5 +47,13 @@ const getOne = async (id: number): Promise<User[]> => {
     return rows;
 }
 
+const update = async (email: string, firstName: string, lastName: string, password: string, id: number): Promise<ResultSetHeader> => {
+    Logger.info(`Updating user with id ${id} in the database`);
+    const conn = await getPool().getConnection();
+    const query = 'UPDATE user SET email = ?, first_name = ?, last_name = ?, password = ? WHERE id = ?';
+    const [ result ] = await conn.query( query, [email, firstName, lastName, password, id] );
+    await conn.release();
+    return result;
+}
 
-export { insert, userLogin, updateToken, removeToken, getOne }
+export { insert, userLogin, updateToken, removeToken, getOne, update }
