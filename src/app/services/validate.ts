@@ -2,12 +2,12 @@ import Ajv from 'ajv';
 import addformats from 'ajv-formats';
 const ajv = new Ajv({removeAdditional: 'all', strict: false});
 addformats(ajv);
-ajv.addFormat('integer', {type: 'string', validate: '^-?[0-9]+$'});
+ajv.addFormat('integer', {type: 'string', validate: /^-?[0-9]+$/});
 
 const validate = async (schema: object, data: any) => {
     try {
         const validator = ajv.compile(schema);
-        const valid = await validator(data);
+        const valid = validator(data);
         if(!valid)
             return ajv.errorsText(validator.errors);
         return true;

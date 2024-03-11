@@ -48,12 +48,6 @@ type Petition = {
 
 }
 
-type PetitionSupporters = {
-
-    number_of_supporters: number
-
-}
-
 type PetitionSupportTier = {
 
     title: string,
@@ -67,3 +61,11 @@ type PetitionSupportTier = {
     money_raised: number,
 
 }
+
+type catergoryId = {
+    
+        id: number,
+
+        name: string,
+    
+    }

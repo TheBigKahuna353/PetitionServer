@@ -13,7 +13,7 @@ const getPetitionSupportTiers = async (id: number): Promise<PetitionSupportTier[
     return rows;
 }
 
-const getNumSupporters = async (id: number): Promise<PetitionSupporters> => {
+const getNumSupporters = async (id: number): Promise<number> => {
     Logger.info(`Getting number of supporters from the database for petition ${id}`);
     const conn = await getPool().getConnection();
     const query = 'SELECT COUNT(supporter.id) AS number_of_supporters, ' +
@@ -24,7 +24,10 @@ const getNumSupporters = async (id: number): Promise<PetitionSupporters> => {
                         'GROUP BY supporter.petition_id';
     const [ rows ] = await conn.query( query, [id] );
     await conn.release();
-    return rows;
+    if (rows.length === 0) {
+        return 0;
+    }
+    return rows[0].number_of_supporters;
 }
 
 const insertTier = async (petitionId: number, title: string, description: string, cost: number): Promise<ResultSetHeader> => {

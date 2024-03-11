@@ -52,7 +52,7 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
                     "ownerLastName": result[i].last_name,
                     "creationDate": result[i].creation_date,
                     "supportingCost": result[i].supporting_cost,
-                    "numberOfSupporters": (await supporters.getNumSupporters(result[i].id)).number_of_supporters,
+                    "numberOfSupporters": (await supporters.getNumSupporters(result[i].id)),
                 }
                 petitionJson.push(petition);
             }
@@ -98,7 +98,7 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
             "ownerId": petition[0].owner_id,
             "ownerFirstName": petition[0].first_name,
             "ownerLastName": petition[0].last_name,
-            "number_of_supporters": (await supporters.getNumSupporters(id)).number_of_supporters,
+            "number_of_supporters": (await supporters.getNumSupporters(id)),
             "createdDate": petition[0].creation_date,
             "description": petition[0].description,
             "money_raised": supps[0].money_raised,
@@ -128,7 +128,7 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
 
 const addPetition = async (req: Request, res: Response): Promise<void> => {
     try{
-        
+
         const schema = schemas.petition_post;
         const validation = await validate(schema, req.body);
         // validate the body
@@ -137,7 +137,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
             res.status(400).send();
             return;
         }
-        //check Authorization
+        // check Authorization
         const token = req.header('X-Authorization');
         if (!token) {
             res.statusMessage = "Unauthorized: No token provided";
@@ -159,7 +159,9 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         // validate the category ID
-        if ((await petitions.getCategoryIds()).indexOf(body.categoryId) === -1) {
+        const categoryIds = await petitions.getCategoryIds();
+
+        if (categoryIds.map(e => e.id).indexOf(parseInt(body.categoryId, 10)) === -1) {
             res.statusMessage = "Bad Request: Invalid category ID";
             res.status(400).send();
             return;
@@ -172,12 +174,11 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
         }
         // add the petition
         const petition = await petitions.insert(
-            body.title, 
-            body.description, 
-            body.categoryId, 
-            user[0].id, 
-            body.imageFilename, 
-            body.supporting);
+            body.title,
+            body.description,
+            body.categoryId,
+            user[0].id,
+            body.imageFilename);
 
         // add the support tiers
         for (const tier of supportTiers) {
@@ -198,10 +199,50 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
 
 const editPetition = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
-        return;
+        const schema = schemas.petition_patch;
+        const validation = await validate(schema, req.body);
+        // validate the body
+        if(validation !== true){
+            res.statusMessage = validation;
+            res.status(400).send();
+            return;
+        }
+        const token = req.header('X-Authorization');
+        if (!token) {
+            res.statusMessage = "Unauthorized: No token provided";
+            res.status(401).send();
+            return;
+        }
+        const user = await getOneFromToken(token);
+        if (user.length === 0) {
+            res.statusMessage = "Unauthorized: Invalid token";
+            res.status(401).send();
+            return;
+        }
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.statusMessage = "Bad Request: ID must be a number";
+            res.status(400).send();
+            return;
+        }
+        const petition = await petitions.getOne(id);
+        if (petition.length === 0) {
+            res.statusMessage = "Not Found: No petition with ID";
+            res.status(404).send();
+            return;
+        }
+        if (petition[0].owner_id !== user[0].id) {
+            res.statusMessage = "Forbidden: User is not the owner of the petition";
+            res.status(403).send();
+            return;
+        }
+        const title = req.body.title || petition[0].title;
+        const description = req.body.description || petition[0].description;
+        const categoryId = req.body.categoryId || petition[0].category_id;
+        await petitions.updatePetition(id, title, description, categoryId);
+
+        res.statusMessage = "OK";
+        res.status(200).send();
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
@@ -212,10 +253,43 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
 
 const deletePetition = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
-        return;
+        const token = req.header('X-Authorization');
+        if (!token) {
+            res.statusMessage = "Unauthorized: No token provided";
+            res.status(401).send();
+            return;
+        }
+        const user = await getOneFromToken(token);
+        if (user.length === 0) {
+            res.statusMessage = "Unauthorized: Invalid token";
+            res.status(401).send();
+            return;
+        }
+        const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            res.statusMessage = "Bad Request: ID must be a number";
+            res.status(400).send();
+            return;
+        }
+        const petition = await petitions.getOne(id);
+        if (petition.length === 0) {
+            res.statusMessage = "Not Found: No petition with ID";
+            res.status(404).send();
+            return;
+        }
+        if (petition[0].owner_id !== user[0].id) {
+            res.statusMessage = "Forbidden: User is not the owner of the petition";
+            res.status(403).send();
+            return;
+        }
+        if (await supporters.getNumSupporters(id) > 0) {
+            res.statusMessage = "Forbidden: Petition has supporters";
+            res.status(403).send();
+            return;
+        }
+        await petitions.deletePetition(id);
+        res.statusMessage = "OK";
+        res.status(200).send();
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";
@@ -226,10 +300,11 @@ const deletePetition = async (req: Request, res: Response): Promise<void> => {
 
 const getCategories = async(req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
-        return;
+
+        const categories = await petitions.getCategoryIds();
+        res.statusMessage = "OK";
+        res.status(200).send(categories);
+
     } catch (err) {
         Logger.error(err);
         res.statusMessage = "Internal Server Error";

@@ -72,20 +72,20 @@ const getOne = async (id: number): Promise<Petition[]> => {
     return rows;
 }
 
-const insert = async ( title: string, description: string, categoryId: number, ownerId: number, imageFilename: string, supportingCost: number): Promise<ResultSetHeader> => {
+const insert = async ( title: string, description: string, categoryId: number, ownerId: number, imageFilename: string): Promise<ResultSetHeader> => {
     Logger.info(`Inserting petition into the database`);
-    const conn = getPool().getConnection();
-    const query = 'INSERT INTO petition (title, description, category_id, owner_id, image_filename, supporting_cost) VALUES (?, ?, ?, ?, ?, ?)';
-    const [ result ] = conn.query( query, [title, description, categoryId, ownerId, imageFilename, supportingCost] );
-    conn.release();
+    const conn = await getPool().getConnection();
+    const query = 'INSERT INTO petition (title, description, category_id, owner_id, image_filename, creation_date) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)';
+    const [ result ] = await conn.query( query, [title, description, categoryId, ownerId, imageFilename] );
+    await conn.release();
     return result;
 }
 
 
-const getCategoryIds = async (): Promise<number[]> => {
+const getCategoryIds = async (): Promise<catergoryId[]> => {
     Logger.info(`Getting categories from the database`);
     const conn = await getPool().getConnection();
-    const query = 'SELECT id FROM category';
+    const query = 'SELECT id, name FROM category';
     const [ rows ] = await conn.query( query );
     await conn.release();
     return rows;
@@ -100,4 +100,22 @@ const getPetitionTitles = async (): Promise<string[]> => {
     return rows;
 }
 
-export {getAll, getOne, insert, getCategoryIds, getPetitionTitles};
+const updatePetition = async (id: number, title: string, description: string, categoryId: number): Promise<ResultSetHeader> => {
+    Logger.info(`Updating petition ${id} in the database`);
+    const conn = await getPool().getConnection();
+    const query = 'UPDATE petition SET title=?, description=?, category_id=? WHERE id=?';
+    const [ result ] = await conn.query( query, [title, description, categoryId, id] );
+    await conn.release();
+    return result;
+}
+
+const deletePetition = async (id: number): Promise<ResultSetHeader> => {
+    Logger.info(`Deleting petition ${id} from the database`);
+    const conn = await getPool().getConnection();
+    const query = 'DELETE FROM petition WHERE id=?';
+    const [ result ] = await conn.query( query, [id] );
+    await conn.release();
+    return result;
+}
+
+export {getAll, getOne, insert, getCategoryIds, getPetitionTitles, updatePetition, deletePetition};
