@@ -1,7 +1,8 @@
 import Ajv from 'ajv';
-import addformays from 'ajv-formats';
+import addformats from 'ajv-formats';
 const ajv = new Ajv({removeAdditional: 'all', strict: false});
-addformays(ajv);
+addformats(ajv);
+ajv.addFormat('integer', {type: 'string', validate: '^-?[0-9]+$'});
 
 const validate = async (schema: object, data: any) => {
     try {

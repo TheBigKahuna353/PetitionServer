@@ -56,4 +56,13 @@ const update = async (email: string, firstName: string, lastName: string, passwo
     return result;
 }
 
-export { insert, userLogin, updateToken, removeToken, getOne, update }
+const getOneFromToken = async (token: string): Promise<User[]> => {
+    Logger.info(`Getting user with token ${token} from the database`);
+    const conn = await getPool().getConnection();
+    const query = 'SELECT * FROM user WHERE auth_token = ?';
+    const [ rows ] = await conn.query( query, [token] );
+    await conn.release();
+    return rows;
+}
+
+export { insert, userLogin, updateToken, removeToken, getOne, update, getOneFromToken }
