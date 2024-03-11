@@ -67,18 +67,21 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
             res.status(400).send();
             return;
         }
-        const filetype = res.header('Content-Type');
+        const filetype = req.header('Content-Type');
         Logger.debug(filetype);
         if(!filetype){
             res.statusMessage = "Bad Request: No Content-Type provided";
             res.status(400).send();
             return;
         }
+
+        const created = userToken[0].image_filename === null;
+
         const filename = `${userId}.${("" + filetype).split('/')[1]}`;
         await SaveImageFile(filename, image);
         await images.save(userId, filename);
 
-        if (userToken[0].image_filename === null) {
+        if (created) {
             res.status(201).send();
         } else {
             res.status(200).send();
