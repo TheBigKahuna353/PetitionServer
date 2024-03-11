@@ -1,5 +1,7 @@
 # SENG365 Assignment 1 API Server (Petition Site)
 
+## [API Viewer](https://editor.swagger.io/)
+
 ## Running locally
 
 1. Use `npm install` to populate the `node_modules/` directory with up-to-date packages
