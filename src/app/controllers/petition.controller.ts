@@ -4,6 +4,7 @@ import validate from '../services/validate';
 import * as petitions from '../models/petitions.model';
 import * as supporters from '../models/supporters.model';
 import { getOneFromToken } from "../models/user.model";
+import * as supportTiersModel from '../models/supporter_tiers.model';
 
 import * as schemas from '../resources/schemas.json'
 
@@ -89,7 +90,8 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const supps = await supporters.getPetitionSupportTiers(id);
+        const supps = await supportTiersModel.getPetitionSupportTiers(id);
+        const stats = await supportTiersModel.getSupportTierStats(id);
 
         const response = {
             "petitionId": petition[0].id,
@@ -101,10 +103,12 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
             "number_of_supporters": (await supporters.getNumSupporters(id)),
             "createdDate": petition[0].creation_date,
             "description": petition[0].description,
-            "money_raised": supps[0].money_raised,
+            "money_raised": stats.money_raised,
             "supportTiers": {},
         }
         const supportTiers = [];
+        Logger.debug("-------------------------------");
+        Logger.debug(supps);
         for (const sup of supps) {
             supportTiers.push({
                 "title": sup.title,
@@ -167,7 +171,8 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         // validate the title
-        if ((await petitions.getPetitionTitles()).indexOf(body.title) !== -1) {
+        const titles = await petitions.getPetitionTitles();
+        if (titles.map(e => e.title).indexOf(body.title) !== -1) {
             res.statusMessage = "Bad Request: Title already exists";
             res.status(400).send();
             return;
@@ -181,8 +186,8 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
             body.imageFilename);
 
         // add the support tiers
-        for (const tier of supportTiers) {
-            await supporters.insertTier(petition.insertId, tier.title, tier.description, tier.cost);
+        for (const tier of body.supportTiers) {
+            await supportTiersModel.insertTier(petition.insertId, tier.title, tier.description, tier.cost);
         }
         res.statusMessage = "Created";
         res.status(201).send({"petitionId": petition.insertId});

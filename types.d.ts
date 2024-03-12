@@ -54,9 +54,23 @@ type PetitionSupportTier = {
 
     description: string,
 
-    cost: number,
+    petition_id: number,
 
     id: number,
+
+    cost: number,
+
+}
+
+type PetitionTitles = {
+    
+    title: string,
+    
+}
+
+type PetitionSupportTierStats = {
+
+    cost: number,
 
     money_raised: number,
 

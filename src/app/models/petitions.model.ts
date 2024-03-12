@@ -91,7 +91,7 @@ const getCategoryIds = async (): Promise<catergoryId[]> => {
     return rows;
 }
 
-const getPetitionTitles = async (): Promise<string[]> => {
+const getPetitionTitles = async (): Promise<PetitionTitles[]> => {
     Logger.info(`Getting petition titles from the database`);
     const conn = await getPool().getConnection();
     const query = 'SELECT title FROM petition';
