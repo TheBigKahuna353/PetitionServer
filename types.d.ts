@@ -101,3 +101,11 @@ type Supporter = {
     timestamp: string
 
 }
+
+type PetitionImage = {
+    
+    image_filename: string,
+
+    auth_token: string,
+    
+}

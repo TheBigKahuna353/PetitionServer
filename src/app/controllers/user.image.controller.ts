@@ -14,7 +14,12 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
         }
         const filename = await images.get(userId);
         if(filename.length === 0){
-            res.statusMessage = "Not Found: No user with specified ID, or user has no image";
+            res.statusMessage = "Not Found: No user with specified ID";
+            res.status(404).send();
+            return;
+        }
+        if (filename[0].image_filename === null) {
+            res.statusMessage = "Not Found: No image found for user";
             res.status(404).send();
             return;
         }
@@ -67,17 +72,24 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
             res.status(400).send();
             return;
         }
-        const filetype = req.header('Content-Type');
+        let filetype = req.header('Content-Type');
         Logger.debug(filetype);
         if(!filetype){
             res.statusMessage = "Bad Request: No Content-Type provided";
             res.status(400).send();
             return;
         }
-
+        filetype = filetype.split(';')[0];
+        const validTypes = ['image/png', 'image/jpeg', 'image/gif'];
+        if(!validTypes.includes(filetype)){
+            res.statusMessage = "Bad Request: Invalid file type";
+            res.status(400).send();
+            return;
+        }
+        filetype = filetype.split('/')[1];
         const created = userToken[0].image_filename === null;
 
-        const filename = `${userId}.${("" + filetype).split('/')[1]}`;
+        const filename = `${userId}.${filetype}`;
         await SaveImageFile(filename, image);
         await images.save(userId, filename);
 
