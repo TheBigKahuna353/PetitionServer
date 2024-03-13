@@ -78,8 +78,26 @@ type PetitionSupportTierStats = {
 
 type catergoryId = {
     
-        id: number,
+    id: number,
 
-        name: string,
+    name: string,
     
-    }
+}
+
+type Supporter = {
+
+    id: number,
+
+    support_tier_id: number,
+
+    first_name: string,
+
+    last_name: string,
+
+    user_id: number,
+
+    message: string,
+
+    timestamp: string
+
+}

@@ -6,7 +6,7 @@ import { ResultSetHeader } from 'mysql2'
 const getPetitionSupportTiers = async (id: number): Promise<PetitionSupportTier[]> => {
     Logger.info(`Getting petition supporters tiers from the database`);
     const conn = await getPool().getConnection();
-    const query = 'SELECT title, description, id, cost FROM support_tier WHERE petition_id = ?';
+    const query = 'SELECT title, description, id, cost, petition_id FROM support_tier WHERE petition_id = ?';
     const [ rows ] = await conn.query( query, [id] );
     await conn.release();
     return rows;
@@ -15,7 +15,7 @@ const getPetitionSupportTiers = async (id: number): Promise<PetitionSupportTier[
 const getSupportTier = async (id: number): Promise<PetitionSupportTier[]> => {
     Logger.info(`Getting petition supporters tiers from the database for tier ${id}`);
     const conn = await getPool().getConnection();
-    const query = 'SELECT title, description, cost FROM support_tier WHERE id = ?';
+    const query = 'SELECT title, description, cost, petition_id FROM support_tier WHERE id = ?';
     const [ rows ] = await conn.query( query, [id] );
     await conn.release();
     return rows;
