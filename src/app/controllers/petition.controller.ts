@@ -107,8 +107,6 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
             "supportTiers": {},
         }
         const supportTiers = [];
-        Logger.debug("-------------------------------");
-        Logger.debug(supps);
         for (const sup of supps) {
             supportTiers.push({
                 "title": sup.title,

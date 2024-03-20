@@ -55,7 +55,6 @@ const getAll = async (q: string | string[], categoryId: number[], supportingCost
         query += 'HAVING MIN(support_tier.cost) <= ' + supportingCost + ' ';
     }
     query += sortBySQL(sortBy);
-    Logger.debug(query);
     const [ rows ] = await conn.query( query );
     await conn.release();
     return rows;

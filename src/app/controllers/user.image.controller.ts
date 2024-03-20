@@ -61,7 +61,6 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         if(userToken[0].auth_token !== token){
-            Logger.debug(userToken[0].auth_token);
             res.statusMessage = "Forbidden: Invalid token";
             res.status(403).send();
             return;
@@ -73,7 +72,6 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         let filetype = req.header('Content-Type');
-        Logger.debug(filetype);
         if(!filetype){
             res.statusMessage = "Bad Request: No Content-Type provided";
             res.status(400).send();
