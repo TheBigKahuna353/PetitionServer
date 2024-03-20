@@ -1,5 +1,7 @@
+import { uid } from 'rand-token';
+
 const createToken = async (): Promise<string> => {
-    return Math.random().toString(36);
+    return uid(16);
 }
 
 export default createToken;

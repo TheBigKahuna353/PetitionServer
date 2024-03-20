@@ -11,11 +11,11 @@ const insert = async (email: string, fistName: string, lastName: string, passwor
     return result;
 }
 
-const userLogin = async (email: string, password: string): Promise<User[]> => {
+const userLogin = async (email: string): Promise<User[]> => {
     Logger.info(`Getting user with email ${email} from the database`);
     const conn = await getPool().getConnection();
-    const query = 'SELECT * FROM user WHERE email = ? AND password = ?';
-    const [ rows ] = await conn.query( query, [email, password] );
+    const query = 'SELECT * FROM user WHERE email = ?';
+    const [ rows ] = await conn.query( query, [email] );
     await conn.release();
     return rows;
 }

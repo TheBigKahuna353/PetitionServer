@@ -1,6 +1,7 @@
 import {Request, Response} from "express";
 import Logger from '../../config/logger';
 import validate from '../services/validate';
+import { hash, compare } from '../services/passwords';
 import createToken from "../services/token";
 import * as users from '../models/user.model';
 
@@ -20,7 +21,9 @@ const register = async (req: Request, res: Response): Promise<void> => {
 
         const {email, firstName, lastName, password} = req.body;
 
-        const result = await users.insert(email, firstName, lastName, password);
+        const encryptedPassword = await hash(password);
+
+        const result = await users.insert(email, firstName, lastName, encryptedPassword);
 
         res.status(201).send({"userId": result.insertId});
 
@@ -51,9 +54,9 @@ const login = async (req: Request, res: Response): Promise<void> => {
 
         const {email, password} = req.body;
 
-        const user = await users.userLogin(email, password);
+        const user = await users.userLogin(email);
 
-        if(user.length === 0){
+        if(user.length === 0 || !await compare(password, user[0].password)) {
             res.statusMessage = "Unauthorized: Incorrect email/password";
             res.status(401).send();
             return;
@@ -158,20 +161,22 @@ const update = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        let password = user[0].password;
+        let hashedPassword = user[0].password;
         let email = user[0].email;
         let firstName = user[0].first_name;
         let lastName = user[0].last_name;
 
         if (req.body.hasOwnProperty('password')) {
-            password = req.body.password;
+            hashedPassword = await hash(req.body.password);
             const currentPassword = req.body.currentPassword;
-            if (currentPassword !== user[0].password) {
+            // compare the current password they provided with the one in the database
+            if (!await compare(currentPassword, user[0].password)) {
                 res.statusMessage = "Unauthorized: Incorrect password";
                 res.status(401).send();
                 return;
             }
-            if (password === currentPassword) {
+            // compare the new password with the current password
+            if (await compare(currentPassword, hashedPassword)) {
                 res.statusMessage = "Bad Request: Identical current and new passwords";
                 res.status(403).send();
                 return;
@@ -187,7 +192,7 @@ const update = async (req: Request, res: Response): Promise<void> => {
             lastName = req.body.lastName;
         }
 
-        const result = await users.update(email, firstName, lastName, password, id);
+        const result = await users.update(email, firstName, lastName, hashedPassword, id);
         res.status(200).send();
 
     } catch (err) {
