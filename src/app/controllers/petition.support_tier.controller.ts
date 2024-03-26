@@ -179,7 +179,7 @@ const editSupportTier = async (req: Request, res: Response): Promise<void> => {
             }
         }
         // check if no supporters have already supported this tier
-        const supporters = await supportersModel.getNumSupportersFromTier(tierId);
+        const supporters = parseInt(await supportersModel.getNumSupportersFromTier(tierId), 10);
         if (supporters > 0) {
             res.statusMessage = "Forbidden: Supporters have already supported this tier";
             res.status(403).send();
@@ -267,7 +267,7 @@ const deleteSupportTier = async (req: Request, res: Response): Promise<void> => 
             return;
         }
         // check if no supporters have already supported this tier
-        const supporters = await supportersModel.getNumSupportersFromTier(tierId);
+        const supporters = parseInt(await supportersModel.getNumSupportersFromTier(tierId), 10);
         if (supporters > 0) {
             res.statusMessage = "Forbidden: Supporters have already supported this tier";
             res.status(403).send();

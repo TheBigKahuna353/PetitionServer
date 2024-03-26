@@ -109,3 +109,12 @@ type PetitionImage = {
     auth_token: string,
     
 }
+
+type supporterStats = {
+        
+        number_of_supporters: any,
+    
+        money_raised: any,
+    
+        supporting_cost: number,
+}

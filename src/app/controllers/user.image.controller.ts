@@ -24,7 +24,11 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         const image = await LoadImageFile(filename[0].image_filename);
-        res.setHeader('Content-Type', 'image/' + filename[0].image_filename.split('.')[1]);
+        let filetype = filename[0].image_filename.split('.')[1];
+        if (filetype === 'jpg') {
+            filetype = 'jpeg';
+        }
+        res.setHeader('Content-Type', 'image/' + filetype);
         res.status(200).send(image);
 
     } catch (err) {

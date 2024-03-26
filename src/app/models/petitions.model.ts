@@ -23,7 +23,7 @@ const sortBySQL = (sortBy: string): string => {
     }
 }
 
-const getAll = async (q: string | string[], categoryId: number[], supportingCost: number, ownerId: number, supporterId: number, sortBy: string): Promise<Petition[]> => {
+const getAll = async (q: string | string[], categoryId: string[], supportingCost: number, ownerId: number, supporterId: number, sortBy: string): Promise<Petition[]> => {
     Logger.info(`Getting petitions from the database`);
     const conn = await getPool().getConnection();
     let query = 'SELECT petition.id, category_id, owner_id, first_name, last_name, creation_date, petition.title, MIN(cost) AS supporting_cost FROM petition ' +

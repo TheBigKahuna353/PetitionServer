@@ -20,7 +20,7 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
         const startIndex = parseInt(req.query.startIndex as string || '0', 10);
         let count = parseInt(req.query.count as string || '-1', 10);
         const q = req.query.q as string;
-        const categoryIds = (req.query.categoryIds as string[] || []).map(Number);
+        let categoryIds = (req.query.categoryIds as string[] || []);
         const supportingCost = parseInt(req.query.supportingCost as string || '-1', 10);
         const ownerId = parseInt(req.query.ownerId as string || '-1', 10);
         const supporterId = parseInt(req.query.supporterId as string || '-1', 10);
@@ -32,7 +32,18 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
             res.status(400).send();
             return;
         }
-
+        if (typeof categoryIds === 'string') {
+            categoryIds = [categoryIds];
+        }
+        // test if catergoryIds all exists
+        const categories = await petitions.getCategoryIds();
+        for (const id of categoryIds) {
+            if (categories.map(e => e.id).indexOf(parseInt(id, 10)) === -1) {
+                res.statusMessage = "Bad Request: Invalid category ID";
+                res.status(400).send();
+                return;
+            }
+        }
 
         const result = await petitions.getAll(q, categoryIds, supportingCost, ownerId, supporterId, sortBy);
 
@@ -91,7 +102,8 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
         }
 
         const supps = await supportTiersModel.getPetitionSupportTiers(id);
-        const stats = await supportTiersModel.getSupportTierStats(id);
+        const suppStats = parseInt(await supporters.getNumSupporters(id), 10);
+        const moneyRaised = parseInt(await supporters.getMoneyRaised(id), 10);
 
         const response = {
             "petitionId": petition[0].id,
@@ -100,10 +112,10 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
             "ownerId": petition[0].owner_id,
             "ownerFirstName": petition[0].first_name,
             "ownerLastName": petition[0].last_name,
-            "number_of_supporters": (await supporters.getNumSupporters(id)),
-            "createdDate": petition[0].creation_date,
+            "numberOfSupporters": suppStats,
+            "creationDate": petition[0].creation_date,
             "description": petition[0].description,
-            "money_raised": stats.money_raised,
+            "moneyRaised": moneyRaised,
             "supportTiers": {},
         }
         const supportTiers = [];
@@ -130,7 +142,7 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
 
 const addPetition = async (req: Request, res: Response): Promise<void> => {
     try{
-
+        Logger.info("Adding petition");
         const schema = schemas.petition_post;
         const validation = await validate(schema, req.body);
         // validate the body
@@ -172,7 +184,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
         const titles = await petitions.getPetitionTitles();
         if (titles.map(e => e.title).indexOf(body.title) !== -1) {
             res.statusMessage = "Bad Request: Title already exists";
-            res.status(400).send();
+            res.status(403).send();
             return;
         }
         // add the petition
@@ -239,6 +251,13 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
             res.status(403).send();
             return;
         }
+        // validate the title
+        const titles = await petitions.getPetitionTitles();
+        if (titles.map(e => e.title).indexOf(req.body.title) !== -1) {
+            res.statusMessage = "Bad Request: Title already exists";
+            res.status(403).send();
+            return;
+        }
         const title = req.body.title || petition[0].title;
         const description = req.body.description || petition[0].description;
         const categoryId = req.body.categoryId || petition[0].category_id;
@@ -285,7 +304,7 @@ const deletePetition = async (req: Request, res: Response): Promise<void> => {
             res.status(403).send();
             return;
         }
-        if (await supporters.getNumSupporters(id) > 0) {
+        if (parseInt(await supporters.getNumSupporters(id), 10) > 0) {
             res.statusMessage = "Forbidden: Petition has supporters";
             res.status(403).send();
             return;

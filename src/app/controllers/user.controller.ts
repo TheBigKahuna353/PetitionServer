@@ -155,9 +155,14 @@ const update = async (req: Request, res: Response): Promise<void> => {
             res.status(404).send();
             return;
         }
+        if (!token) {
+            res.statusMessage = "Unauthorized: User is not authenticated";
+            res.status(401).send();
+            return;
+        }
         if(user[0].auth_token !== token){
             res.statusMessage = "Unauthorized: Can not edit another user's information";
-            res.status(401).send();
+            res.status(403).send();
             return;
         }
 
