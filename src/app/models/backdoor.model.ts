@@ -24,14 +24,14 @@ const resetDb = async (): Promise<any> => {
 };
 
 const loadData = async (): Promise<any> => {
-    await populateDefaultUsers();
-    try {
-        const sql = await fs.readFile('src/app/resources/resample_database.sql', 'utf8');
-        await getPool().query(sql);
-    } catch (err) {
-        Logger.error(err.sql);
-        throw err;
-    }
+    // await populateDefaultUsers();
+    // try {
+    //     const sql = await fs.readFile('src/app/resources/resample_database.sql', 'utf8');
+    //     await getPool().query(sql);
+    // } catch (err) {
+    //     Logger.error(err.sql);
+    //     throw err;
+    // }
 
     const defaultPhotos = await fs.readdir(defaultPhotoDirectory);
     const promises = defaultPhotos.map((file: string) => fs.copyFile(defaultPhotoDirectory + file, imageDirectory + file));
