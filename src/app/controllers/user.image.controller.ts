@@ -34,6 +34,7 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
     } catch (err) {
         if (err.code === 'ENOENT') {
             res.statusMessage = "Not Found on server";
+            Logger.error(err);
             res.status(404).send();
             return;
         }
