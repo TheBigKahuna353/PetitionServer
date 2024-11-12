@@ -84,7 +84,7 @@ const insert = async ( title: string, description: string, categoryId: number, o
 const getCategoryIds = async (): Promise<catergoryId[]> => {
     Logger.info(`Getting categories from the database`);
     const conn = await getPool().getConnection();
-    const query = 'SELECT id, name FROM category';
+    const query = 'SELECT id as categoryId, name FROM category';
     const [ rows ] = await conn.query( query );
     await conn.release();
     return rows;
