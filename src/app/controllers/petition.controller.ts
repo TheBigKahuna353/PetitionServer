@@ -147,6 +147,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
         const validation = await validate(schema, req.body);
         // validate the body
         if(validation !== true){
+            Logger.error("Error: " + validation);
             res.statusMessage = validation;
             res.status(400).send();
             return;
