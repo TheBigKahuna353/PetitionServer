@@ -38,7 +38,7 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
         // test if catergoryIds all exists
         const categories = await petitions.getCategoryIds();
         for (const id of categoryIds) {
-            if (categories.map(e => e.id).indexOf(parseInt(id, 10)) === -1) {
+            if (categories.map(e => e.categoryId).indexOf(parseInt(id, 10)) === -1) {
                 res.statusMessage = "Bad Request: Invalid category ID";
                 res.status(400).send();
                 return;
@@ -176,7 +176,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
         // validate the category ID
         const categoryIds = await petitions.getCategoryIds();
 
-        if (categoryIds.map(e => e.id).indexOf(parseInt(body.categoryId, 10)) === -1) {
+        if (categoryIds.map(e => e.categoryId).indexOf(parseInt(body.categoryId, 10)) === -1) {
             res.statusMessage = "Bad Request: Invalid category ID";
             res.status(400).send();
             return;

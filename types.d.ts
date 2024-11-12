@@ -78,7 +78,7 @@ type PetitionSupportTierStats = {
 
 type catergoryId = {
     
-    id: number,
+    categoryId: number,
 
     name: string,
     
