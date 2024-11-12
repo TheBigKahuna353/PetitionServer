@@ -27,10 +27,10 @@ const getAll = async (q: string | string[], categoryId: string[], supportingCost
     Logger.info(`Getting petitions from the database`);
     const conn = await getPool().getConnection();
     let query = 'SELECT petition.id, category_id, owner_id, first_name, last_name, creation_date, petition.title, MIN(cost) AS supporting_cost FROM petition ' +
-                    'JOIN user ON owner_id=user.id ' +
-                    'JOIN supporter ON petition.id=supporter.petition_id ' +
-                    'JOIN category ON category_id=category.id ' +
-                    'JOIN support_tier ON support_tier.petition_id=petition.id ' +
+                    'LEFT JOIN user ON owner_id=user.id ' +
+                    'LEFT JOIN supporter ON petition.id=supporter.petition_id ' +
+                    'LEFT JOIN category ON category_id=category.id ' +
+                    'LEFT JOIN support_tier ON support_tier.petition_id=petition.id ' +
                     'WHERE ';
     if (q) {
         query += `(petition.title LIKE '%${q}%' OR petition.description LIKE '%${q}%') AND `;
