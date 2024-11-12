@@ -47,7 +47,6 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
 
         const result = await petitions.getAll(q, categoryIds, supportingCost, ownerId, supporterId, sortBy);
 
-
         res.statusMessage = "OK";
         const petitionJson = [];
         if (count === -1) {
